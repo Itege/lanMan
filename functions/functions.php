@@ -50,6 +50,7 @@
 			}
 		}
 	}
+	/*
 	function buildList($table){
 		$id = $_SESSION['userId'];
 		if($table=='activities'){
@@ -68,6 +69,7 @@
 		}
 		return $built;
 	}
+	*/
 	function buildVotes($table){
 		$id = $_SESSION['userId'];
 		if($table=='activities'){
@@ -75,7 +77,8 @@
 		}else{
 			$lookup = $table;
 		}
-		$query = sprintf("select l.description, group_concat(d.user_id, ', ') as \"users\" from db_".$lookup."_votes d join lu_$table l on l.id = d.".$lookup."_id group by description order by count(d.".$lookup."_id)");
+		$query = "select description from lu_$table";
+		echo $query;
 		$result=executeQuery($query);
 		$built="";
 		if($result->num_rows > 0){

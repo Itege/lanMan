@@ -77,7 +77,7 @@
 							<br>
 							<form method='post'>
 								<select multiple class='form-control' name='voteFood'>
-									<?= buildVotes() ?>
+									<?= buildVotes("food") ?>
 								</select>
 								<br>
 								<button type="submit" class="btn btn-success">Vote</button>
