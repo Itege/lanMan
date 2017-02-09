@@ -42,7 +42,7 @@
 							<label for='password'>Username</label>
 							<input type='password' class='form-control' id='password' name='password' required/>
 						</div>
-						<button type='submit' class='btn btn-default'>Submit</button>
+						<button type='submit' class='btn btn-default'>Login</button>
 						<a href='create.php' class='btn btn-default pull-right'>Create Account</a>
 					</form>
 				</div>

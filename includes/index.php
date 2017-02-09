@@ -9,6 +9,13 @@
 			.navbar-static-top{
 				padding-right: 20px;
 			}
+			.has-table{
+				overflow-y: auto;
+				height: 150px;
+				border: 1px solid #ddd;
+				border-top: none;
+				border-radius: 3px;
+			}
 		</style>
 	</head>
 	<body>
@@ -28,7 +35,7 @@
 				<div class='collapse navbar-collapse' id="bs-example-navbar-collapse-1">
 					 <p class="navbar-text navbar-right">
 						<?= getUserName() ?>,
-						<a href='.' class='navbar-link'>Logout</a>
+						<a href='logout.php' class='navbar-link'>Logout</a>
 					</p>
 				</div>
 			</div>
@@ -51,9 +58,11 @@
 							</form>
 							<br>
 							<form method='post'>
-								<select multiple class='form-control' name='voteDocket'>
-									<?= buildVotes("activities") ?>
-								</select>
+								<div class='has-table'>
+									<table class='table table-condensed'>	
+										<?= buildVotes("activities") ?>
+									</table>
+								</div>
 								<br>
 								<button type="submit" class="btn btn-success">Vote</button>
 							</form>
@@ -76,9 +85,11 @@
 							</form>
 							<br>
 							<form method='post'>
-								<select multiple class='form-control' name='voteFood'>
-									<?= buildVotes("food") ?>
-								</select>
+								<div class='has-table'>
+									<table class='table table-condensed'>	
+										<?= buildVotes("food") ?>
+									</table>
+								</div>
 								<br>
 								<button type="submit" class="btn btn-success">Vote</button>
 							</form>
@@ -121,25 +132,17 @@
 									</tbody>
 								</table>
 							</form>
-							<table class='table table-striped'>
-								<tbody>
-									<tr>
-										<td>
-											1
-										</td>
-									</tr>
-									<tr>
-										<td>
-											2
-										</td>
-									</tr>
-									<tr>
-										<td>
-											3
-										</td>
-									</tr>
-								</tbody>
-							</table>
+							<div class='has-table'>
+								<table class='table table-striped'>
+									<tbody>
+										<tr>
+											<td>
+												test
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
 						</div>
 					</div>
 				</div>
