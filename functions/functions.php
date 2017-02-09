@@ -85,7 +85,7 @@
 				$description = $row['description'];
 				$selected = '';
 				$voted = '';
-				$query = "select d.user_id, d.".$lookup."_id, u.name from db_".$lookup."_votes d join lu_users u on u.id = d.user_id where ".$lookup."_id = $id";
+				$query = "select d.user_id, d.".$lookup."_id, u.name from db_".$lookup."_votes d join lu_users u on u.id = d.user_id where d.".$lookup."_id = $id";
 				$votes=executeQuery($query);
 				if($votes->num_rows > 0){
 					while($vote = $votes->fetch_assoc()){
@@ -106,7 +106,6 @@
 		if($description != ''){
 			$id=$_SESSION['userId'];
 			$table = mysqli_real_escape_string($GLOBALS['conn'],$table);
-			$description = array_map('htmlspecialchars',$description); 
 			$built="";
 			if($table=='activity'){
 				$lookup='activities';
@@ -114,6 +113,7 @@
 				$lookup = $table;
 			}
 			foreach($description as &$value){
+				$value=mysqli_real_escape_string($GLOBALS['conn'],$value);
 				executeInsertOrUpdate("insert ignore into lu_".$lookup."(description) values('$value')");
 				$getId = executeQuery("select id from lu_".$lookup." where description = '$value'");
 				if($getId->num_rows == 1){

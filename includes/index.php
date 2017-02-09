@@ -17,6 +17,20 @@
 				border-radius: 3px;
 			}
 		</style>
+		<script type='text/javascript'>
+			$(function(){
+				$('.add-btn').on('click', function(e){
+					$parent = $(this).closest('.panel');
+					newDescription = $parent.find('input[name="add"]').val();
+					if(newDescription != ''){
+						var $newItem = $parent.find('table').first().find('tr').first().clone();
+						$newItem.find('input[type="checkbox"]').first().val(newDescription).prop('checked',true);
+						$newItem.find('td').first().siblings().first().text(newDescription);
+						$newItem.appendTo($parent.find('table'));
+					}
+				});
+			});
+		</script>
 	</head>
 	<body>
 		<nav class='navbar navbar-static-top navbar-inverse'>
