@@ -16,17 +16,34 @@
 				border-top: none;
 				border-radius: 3px;
 			}
+			.gravatar{
+				padding: 1px;
+			}
 		</style>
 		<script type='text/javascript'>
 			$(function(){
-				$('.add-btn').on('click', function(e){
+				$('[data-toggle="popover"]').popover()
+				$('[data-toggle="tooltip"]').tooltip()
+				$('.add-btn.food').on('click', function(e){
 					$parent = $(this).closest('.panel');
-					newDescription = $parent.find('input[name="add"]').val();
+					newDescription = $parent.find('input[name="add"]').val().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 					if(newDescription != ''){
 						var $newItem = $parent.find('table').first().find('tr').first().clone();
 						$newItem.find('input[type="checkbox"]').first().val(newDescription).prop('checked',true);
 						$newItem.find('td').first().siblings().first().text(newDescription);
-						$newItem.appendTo($parent.find('table'));
+						newItem="<tr><td><input checked name='votefood[]' type='checkbox' value='"+newDescription+"'></td><td>"+newDescription+"</td><td></td></tr>";
+						$parent.find('table').append(newItem);
+					}
+				});
+				$('.add-btn.activity').on('click', function(e){
+					$parent = $(this).closest('.panel');
+					newDescription = $parent.find('input[name="add"]').val().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+					if(newDescription != ''){
+						var $newItem = $parent.find('table').first().find('tr').first().clone();
+						$newItem.find('input[type="checkbox"]').first().val(newDescription).prop('checked',true);
+						$newItem.find('td').first().siblings().first().text(newDescription);
+						newItem="<tr><td><input checked name='voteactivity[]' type='checkbox' value='"+newDescription+"'></td><td>"+newDescription+"</td><td></td></tr>";
+						$parent.find('table').append(newItem);
 					}
 				});
 			});
@@ -48,7 +65,7 @@
 				</div>
 				<div class='collapse navbar-collapse' id="bs-example-navbar-collapse-1">
 					 <p class="navbar-text navbar-right">
-						<?= getUserName() ?>,
+						<a href='update.php' class='navbar-link'><?= getUserName() ?></a>,
 						<a href='logout.php' class='navbar-link'>Logout</a>
 					</p>
 				</div>
@@ -66,7 +83,7 @@
 										<input name='add' type='text' class='form-control'>
 									</div>
 									<div class='col-md-3 text-right'>
-										<button type='button' class='btn btn-primary add-btn'>Add</button>
+										<button type='button' class='btn btn-primary add-btn activity'>Add</button>
 									</div>
 								</div>
 							</form>
@@ -94,7 +111,7 @@
 										<input name='add' type='text' class='form-control'>
 									</div>
 									<div class='col-md-3 text-right'>
-										<button type='button' class='btn btn-primary add-btn'>Add</button>
+										<button type='button' class='btn btn-primary add-btn food'>Add</button>
 									</div>
 								</div>
 							</form>

@@ -19,11 +19,12 @@
 			echo $e;
 		}
 	}
-	function createUser($name, $username, $password){
+	function createUser($name, $username, $password, $email){
 		$name = mysqli_real_escape_string($GLOBALS['conn'],$name);
 		$username = mysqli_real_escape_string($GLOBALS['conn'], $username);
+		$email = mysqli_real_escape_string($GLOBALS['conn'], $email);
 		$password = mysqli_real_escape_string($GLOBALS['conn'], password_hash($password, PASSWORD_BCRYPT));
-		$createUser = sprintf("insert into lu_users(name, username, password) values('$name', '$username', '$password')");
+		$createUser = sprintf("insert into lu_users(name, username, password,email) values('$name', '$username', '$password','$email')");
 		executeInsertOrUpdate($createUser);
 		$_SESSION['userId']=$GLOBALS['conn']->insert_id;
 	}
@@ -85,14 +86,14 @@
 				$description = $row['description'];
 				$selected = '';
 				$voted = '';
-				$query = "select d.user_id, d.".$lookup."_id, u.name from db_".$lookup."_votes d join lu_users u on u.id = d.user_id where d.".$lookup."_id = $id";
+				$query = "select d.user_id, u.email, d.".$lookup."_id, u.name from db_".$lookup."_votes d join lu_users u on u.id = d.user_id where d.".$lookup."_id = $id";
 				$votes=executeQuery($query);
 				if($votes->num_rows > 0){
 					while($vote = $votes->fetch_assoc()){
 						if($selected == '' && $vote['user_id'] == $_SESSION['userId']){
 							$selected = 'checked';
 						}
-						$voted = $voted."<span class='label label-default'>".substr($vote['name'],0,1)."</span>";
+						$voted = $voted."<img class='gravatar' data-toggle='popover' data-content='Coming Soon&trade;' data-placement='bottom' data-trigger='hover' title='".$vote['name']."' src='https://www.gravatar.com/avatar/".md5($vote['email'])."?s=20' alt='".substr($vote['name'],0,1)."'>";
 					}
 				}
 				$voted="<td class='text-right'>".$voted."</td>";
@@ -127,5 +128,22 @@
 			$castVote = sprintf("insert ignore into db_".$table."_votes(user_id,".$table."_id) values$built");
 			executeInsertOrUpdate($castVote);
 		}
+	}
+	function getUserInfo(){
+		$id=$_SESSION['userId'];
+		$query="select * from lu_users where id = $id";
+		$results = executeQuery($query);
+		if($results->num_rows == 1){
+			while($row = $results->fetch_assoc()){
+				return $row;
+			}
+		}
+	}
+	function updateUserInfo($name, $email){
+		$name = mysqli_real_escape_string($GLOBALS['conn'],$name);
+		$email = mysqli_real_escape_string($GLOBALS['conn'], $email);
+		$id=$_SESSION['userId'];
+		$query="update lu_users set name='$name', email='$email' where id = $id";
+		executeInsertOrUpdate($query);
 	}
 ?>

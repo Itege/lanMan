@@ -39,6 +39,9 @@
 							<input type='text' class='form-control' id='name' name='name' placeholder='Name' required/>
 						</div>
 						<div class='form-group'>
+							<label for='email'>Email</label>
+							<input type='email' class='form-control' id='email' name='email' placeholder='example@example.com' required/>
+						<div class='form-group'>
 							<label for='username'>Username</label>
 							<input type='text' class='form-control' id='username' name='username' placeholder='username' required/>
 						</div>

@@ -1,4 +1,5 @@
 <!doctype html>
+<?php $userInfo = getUserInfo()?>
 <html>
 	<head>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -35,15 +36,14 @@
 					<h3 class='text-center'>Login</h3>
 					<form method='post' action='.'>
 						<div class='form-group'>
-							<label for='username'>Username</label>
-							<input type='text' class='form-control' id='username' name='username' placeholder='username' required/>
+							<label for='name'>Name</label>
+							<input type='text' class='form-control' id='name' name='name' placeholder='name' required value='<?= $userInfo["name"]?>'>
 						</div>
 						<div class='form-group'>
-							<label for='password'>Password</label>
-							<input type='password' class='form-control' id='password' name='password' required/>
+							<label for='email'>Email</label>
+							<input type='email' class='form-control' id='email' name='email' required value='<?= $userInfo["email"]?>'/>
 						</div>
-						<button type='submit' class='btn btn-default'>Login</button>
-						<a href='create.php' class='btn btn-default pull-right'>Create Account</a>
+						<button type='submit' class='btn btn-default' value='update' name='page'>Update</button>
 					</form>
 				</div>
 				<div class='col-md-3'>
