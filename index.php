@@ -13,22 +13,10 @@
 		}
 	}
 	if(isset($_SESSION['userId']) && $_SESSION['userId'] != ''){
-		if(isset($_POST['voteDocket']) || isset($_POST['addDocket'])){
-			if(isset($_POST['voteDocket'])){
-				$voteArray = $_POST['voteDocket'];
-			}else{
-				$voteArray=[];
-			}
-			array_push($voteArray,$_POST['addDocket']);
-			castVote('activity',$voteArray);
-		}elseif(isset($_POST['voteFood']) || isset($_POST['addFood'])){
-			if(isset($_POST['voteFood'])){
-				$voteArray=$_POST['voteFood'];
-			}else{
-				$voteArray=[];
-			}
-			array_push($voteArray,$_POST['addFood']);
-			castVote('food',$voteArray);
+		if(isset($_POST['voteactivity'])){
+			castVote('activity',$_POST['voteactivity']);
+		}elseif(isset($_POST['votefood'])){
+			castVote('food',$_POST['votefood']);
 		}
 		include 'includes/index.php';
 	}else{
