@@ -21,15 +21,14 @@
 	}
 	function createUser($name, $username, $password){
 		$name = mysqli_real_escape_string($GLOBALS['conn'],$name);
-		$username = mysqli_real_escape_string($GLOBALS['conn'],$username); 
-		$password = password_hash(mysqli_real_escape_string($GLOBALS['conn'],$password),PASSWORD_BCRYPT); 
-		$createUser = sprintf("insert into lu_users(name,username,password) values('$name','$username','$password')");
+		$username = mysqli_real_escape_string($GLOBALS['conn'], $username);
+		$password = mysqli_real_escape_string($GLOBALS['conn'], password_hash($password, PASSWORD_BCRYPT));
+		$createUser = sprintf("insert into lu_users(name, username, password) values('$name', '$username', '$password')");
 		executeInsertOrUpdate($createUser);
 		$_SESSION['userId']=$GLOBALS['conn']->insert_id;
 	}
-	function connectUser($username,$password){
+	function connectUser($username, $password){
 		$username = mysqli_real_escape_string($GLOBALS['conn'],$username); 
-		$password = mysqli_real_escape_string($GLOBALS['conn'],$password); 
 		$createUser = sprintf("select id,password from lu_users where username='$username'");
 		$result = executeQuery($createUser);
 		if($result->num_rows == 1){
