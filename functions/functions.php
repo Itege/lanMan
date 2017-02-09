@@ -90,37 +90,43 @@
 				$votes=executeQuery($query);
 				if($votes->num_rows > 0){
 					while($vote = $votes->fetch_assoc()){
-						if($selected = '' && $vote['user_id'] == $_SESSION['userId']){
+						if($selected == '' && $vote['user_id'] == $_SESSION['userId']){
 							$selected = 'checked';
 						}
-						$voted = $voted."<span class='label label-default'>".substr($row['name'],0)."</span>";
+						$voted = $voted."<span class='label label-default'>".substr($vote['name'],0,1)."</span>";
 					}
-					$voted="<td>".$voted."</td>";
 				}
-				$built=$built."<tr><td><input name='vote".$lookup."[]' type='checkbox' value='$description' $selected></td><td>$description</td>$voted</tr>";
+				$voted="<td class='text-right'>".$voted."</td>";
+				$built=$built."<tr><td><input name='vote".$lookup."[]' type='checkbox' value='".htmlspecialchars($description,ENT_QUOTES)."' $selected></td><td>$description</td>$voted</tr>";
 			}
 		}
 		return $built;
 	}
 	function castVote($table,$description){		
 		executeInsertOrUpdate("delete from db_".$table."_votes where user_id = ".$_SESSION['userId']);
-		$id=$_SESSION['userId'];
-		$table = mysqli_real_escape_string($GLOBALS['conn'],$table);
-		$description = mysqli_real_escape_string($GLOBALS['conn'],implode(", ",$description)); 
-		$description = explode(", ", $description);
-		$built="";
-		if($table=='activity'){
-			$lookup='activities';
-		}else{
-			$lookup = $table;
+		if($description != ''){
+			$id=$_SESSION['userId'];
+			$table = mysqli_real_escape_string($GLOBALS['conn'],$table);
+			$description = array_map('htmlspecialchars',$description); 
+			$built="";
+			if($table=='activity'){
+				$lookup='activities';
+			}else{
+				$lookup = $table;
+			}
+			foreach($description as &$value){
+				executeInsertOrUpdate("insert ignore into lu_".$lookup."(description) values('$value')");
+				$getId = executeQuery("select id from lu_".$lookup." where description = '$value'");
+				if($getId->num_rows == 1){
+					while($anId = $getId->fetch_assoc()){
+						$itemId = $anId['id'];
+					}
+				}
+				$built=$built."($id,$itemId)";
+			}
+			$built= str_replace(")(", "),(",$built);
+			$castVote = sprintf("insert ignore into db_".$table."_votes(user_id,".$table."_id) values$built");
+			executeInsertOrUpdate($castVote);
 		}
-		foreach($description as &$value){
-			executeInsertOrUpdate("insert ignore into lu_".$lookup."(description) values('$value')");
-			$built=$built."($id,".$GLOBALS['conn']->insert_id.")";
-			echo $built;
-		}
-		$built= str_replace(")(", "),(",$built);
-		$castVote = sprintf("insert ignore into db_".$table."_votes(user_id,".$table."_id) values$built");
-		executeInsertOrUpdate($castVote);
 	}
 ?>

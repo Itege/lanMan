@@ -13,9 +13,9 @@
 		}
 	}
 	if(isset($_SESSION['userId']) && $_SESSION['userId'] != ''){
-		if(isset($_POST['voteactivity'])){
+		if(isset($_POST['voteFor']) and $_POST['voteFor'] == 'activity'){
 			castVote('activity',$_POST['voteactivity']);
-		}elseif(isset($_POST['votefood'])){
+		}elseif(isset($_POST['voteFor']) and $_POST['voteFor'] == 'food'){
 			castVote('food',$_POST['votefood']);
 		}
 		include 'includes/index.php';

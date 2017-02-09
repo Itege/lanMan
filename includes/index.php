@@ -29,7 +29,7 @@
 						<span class="icon-bar"></span>
 					</button>
 					<a class='navbar-brand' href='.'>
-						lanParty
+						lanMan
 					</a>
 				</div>
 				<div class='collapse navbar-collapse' id="bs-example-navbar-collapse-1">
@@ -58,6 +58,7 @@
 							</form>
 							<br>
 							<form method='post'>
+								<input type='hidden' value='activity' name='voteFor'/>
 								<div class='has-table'>
 									<table class='table table-condensed'>	
 										<?= buildVotes("activities") ?>
@@ -85,6 +86,7 @@
 							</form>
 							<br>
 							<form method='post'>
+								<input type='hidden' value='food' name='voteFor'/>
 								<div class='has-table'>
 									<table class='table table-condensed'>	
 										<?= buildVotes("food") ?>
