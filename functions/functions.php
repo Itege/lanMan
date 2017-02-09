@@ -115,7 +115,7 @@
 			$lookup = $table;
 		}
 		foreach($description as &$value){
-			executeInsertOrUpdate("replace into lu_".$lookup."(description) values('$value')");
+			executeInsertOrUpdate("insert ignore into lu_".$lookup."(description) values('$value')");
 			$built=$built."($id,".$GLOBALS['conn']->insert_id.")";
 			echo $built;
 		}
