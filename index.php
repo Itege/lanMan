@@ -19,6 +19,8 @@
 			castVote('activity',$_POST['voteactivity']);
 		}elseif(isset($_POST['voteFor']) and $_POST['voteFor'] == 'food'){
 			castVote('food',$_POST['votefood']);
+		}elseif(isset($_POST['action']) && $_POST['action']=='rsvp'){
+			rsvp($_POST['attending'],$_POST['comment']);
 		}
 		include 'includes/index.php';
 	}else{

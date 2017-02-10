@@ -77,7 +77,7 @@
 		}else{
 			$lookup = $table;
 		}
-		$query = "select * from lu_$table";
+		$query = "select l.* from lu_$table l left outer join (select *, count(*) as votes from db_".$lookup."_votes group by ".$lookup."_id) d on l.id = d.".$lookup."_id order by d.votes desc";
 		$result=executeQuery($query);
 		$built="";
 		if($result->num_rows > 0){
@@ -93,7 +93,7 @@
 						if($selected == '' && $vote['user_id'] == $_SESSION['userId']){
 							$selected = 'checked';
 						}
-						$voted = $voted."<img class='gravatar' data-toggle='popover' data-content='Coming Soon&trade;' data-placement='bottom' data-trigger='hover' title='".$vote['name']."' src='https://www.gravatar.com/avatar/".md5($vote['email'])."?s=20' alt='".substr($vote['name'],0,1)."'>";
+						$voted = $voted."<img class='gravatar' data-container='body' data-toggle='popover' data-content='Profile Links Coming Soon&trade;' data-placement='bottom' data-trigger='hover' title='".$vote['name']."' src='https://www.gravatar.com/avatar/".md5($vote['email'])."?s=22&d=identicon' alt='".substr($vote['name'],0,1)."'>";
 					}
 				}
 				$voted="<td class='text-right'>".$voted."</td>";
@@ -145,5 +145,66 @@
 		$id=$_SESSION['userId'];
 		$query="update lu_users set name='$name', email='$email' where id = $id";
 		executeInsertOrUpdate($query);
+	}
+	function rsvp($attending,$comment){		
+		executeInsertOrUpdate("delete from db_rsvp where user_id = ".$_SESSION['userId']);
+		if($attending != ''){
+			$id=$_SESSION['userId'];
+			$comment = mysqli_real_escape_string($GLOBALS['conn'],$comment);
+			$rsvp = sprintf("insert into db_rsvp(user_id,comment) values($id,'$comment')");
+			executeInsertOrUpdate($rsvp);
+		}
+	}
+	function getUserStatus(){
+		$id=$_SESSION['userId'];
+		$query="select * from db_rsvp where user_id = $id";
+		$results = executeQuery($query);
+		if($results->num_rows == 1){
+			while($row = $results->fetch_assoc()){
+				return $row;
+			}
+		}
+	}
+	function getRsvpUsers(){
+		$query="select r.comment, u.name, u.email from db_rsvp r join lu_users u on r.user_id = u.id";
+		$results = executeQuery($query);
+		$rsvp = '';
+		if($results->num_rows > 0){
+			while($row = $results->fetch_assoc()){
+				$name = htmlspecialchars($row['name'],ENT_QUOTES);
+				$comment = htmlspecialchars($row['comment'],ENT_QUOTES);
+				$email= $row['email'];
+				$rsvp = $rsvp."<tr vertical-align='center'><td><img data-container='body' data-toggle='popover' data-content='Profile Links Coming Soon&trade;' data-placement='bottom' data-trigger='hover' title='".$row['name']."' class='gravatar' src='https://www.gravatar.com/avatar/".md5($email)."?s=30&d=identicon'></td><td><b>$name</b></td><td>$comment</td></tr>";
+			}
+		}
+		return $rsvp;
+	}
+	function getDocket(){
+		if(date("w", time()) == 5){
+			$docket = '';
+			$query = "select l.* from lu_activities l join (select *, count(*) as votes from db_activity_votes group by activity_id) d on l.id = d.activity_id order by votes desc limit 3";
+			$results = executeQuery($query);
+			if($results->num_rows > 0){
+				while($row = $results->fetch_assoc()){
+					$docket = $docket.$row['description'].", ";
+				}
+				$docket = rtrim($docket,", ");
+			}
+			return "<div class='alert alert-success' role='alert'><b>Today's Docket</b> - ".$docket."</div>";
+		}
+	}
+	function getFood(){
+		if(date("w", time()) == 5){
+			$food = '';
+			$query = "select l.* from lu_food l join (select *, count(*) as votes from db_food_votes group by food_id) d on l.id = d.food_id order by votes desc limit 1";
+			$results = executeQuery($query);
+			if($results->num_rows > 0){
+				while($row = $results->fetch_assoc()){
+					$food = $food.$row['description'].", ";
+				}
+				$food = rtrim($food,", ");
+			}
+			return "<div class='alert alert-success' role='alert'><b>Today's Cuisine</b> - ".$food."</div>";
+		}
 	}
 ?>

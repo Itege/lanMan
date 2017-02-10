@@ -14,7 +14,7 @@
 	</head>
 	<body>
 		<nav class='navbar navbar-fixed-top navbar-inverse'>
-			<div class='container-fluid'>
+			<div class='container'>
 				<div class='navbar-header'>
 					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
 						<span class="sr-only">Toggle navigation</span>
@@ -33,7 +33,7 @@
 				<div class='col-md-3'>
 				</div>
 				<div class='col-md-6'>
-					<h3 class='text-center'>Login</h3>
+					<h3 class='text-center'>Update Info</h3>
 					<form method='post' action='.'>
 						<div class='form-group'>
 							<label for='name'>Name</label>
