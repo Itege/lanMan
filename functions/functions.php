@@ -1,5 +1,7 @@
 <?php
+
 	include '../database/lanMan.php';
+	require 'mailer/PHPMailer-master/PHPMailerAutoload.php';
 	$GLOBALS['conn'] = new mysqli($host, $username, $password, $db);
 	if ($conn->connect_error){
 		die("Connection failed: " . $conn->connect_error);
@@ -8,16 +10,12 @@
 		if($GLOBALS['conn']->query($statement) === TRUE){
 			return;
 		}else{
-			echo "Error: " . $sql . "<br>" . $conn->error;
+			echo "Error: " . $statement . "<br>" . $GLOBALS['conn']->error;
 		}
 	}
 	function executeQuery($query){
-		try{
-			$result = $GLOBALS['conn']->query($query);
-			return $result;
-		}catch(Exception $e){
-			echo $e;
-		}
+		$result = $GLOBALS['conn']->query($query);
+		return $result;
 	}
 	function createUser($name, $username, $password, $email){
 		$name = mysqli_real_escape_string($GLOBALS['conn'],$name);
@@ -93,7 +91,9 @@
 						if($selected == '' && $vote['user_id'] == $_SESSION['userId']){
 							$selected = 'checked';
 						}
-						$voted = $voted."<img class='gravatar' data-container='body' data-toggle='popover' data-content='Profile Links Coming Soon&trade;' data-placement='bottom' data-trigger='hover' title='".$vote['name']."' src='https://www.gravatar.com/avatar/".md5($vote['email'])."?s=22&d=identicon' alt='".substr($vote['name'],0,1)."'>";
+						if(date("N") == 5 && date("G") >= 17 || $vote['user_id'] == $_SESSION["userId"]){
+							$voted = $voted."<img class='gravatar' data-container='body' data-toggle='popover' data-content='Profile Links Coming Soon&trade;' data-placement='bottom' data-trigger='hover' title='".$vote['name']."' src='https://www.gravatar.com/avatar/".md5($vote['email'])."?s=22&d=identicon' alt='".substr($vote['name'],0,1)."'>";
+						}
 					}
 				}
 				$voted="<td class='text-right'>".$voted."</td>";
@@ -102,21 +102,28 @@
 		}
 		return $built;
 	}
-	function castVote($table,$description){		
-		executeInsertOrUpdate("delete from db_".$table."_votes where user_id = ".$_SESSION['userId']);
+	function castActivityVote($description){		
+		executeInsertOrUpdate("delete from db_activity_votes where user_id = ".$_SESSION['userId']);
 		if($description != ''){
 			$id=$_SESSION['userId'];
-			$table = mysqli_real_escape_string($GLOBALS['conn'],$table);
 			$built="";
-			if($table=='activity'){
-				$lookup='activities';
-			}else{
-				$lookup = $table;
-			}
 			foreach($description as &$value){
+				$rawValue=$value;
 				$value=mysqli_real_escape_string($GLOBALS['conn'],$value);
-				executeInsertOrUpdate("insert ignore into lu_".$lookup."(description) values('$value')");
-				$getId = executeQuery("select id from lu_".$lookup." where description = '$value'");
+				try{
+					executeInsertOrUpdate("insert ignore into lu_activities(description) values('$value')");
+					if($GLOBALS['conn']->insert_id != 0){
+						$user = executeQuery("select name from lu_users where id = $id");
+						if($user->num_rows == 1){
+							while($aUser = $user->fetch_assoc()){
+								sendMail("New Item Added to Activities", "<b>".$aUser['name']." has added \"$rawValue\" to the list of activities.</b>","select u.email from lu_users u join db_rsvp r on u.id=r.user_id where u.notify = 1");
+							}
+						}
+					}
+					$getId = executeQuery("select id from lu_activities where description = '$value'");
+				}catch(Exception $e){
+					$getId = executeQuery("select id from lu_activities where description = '$value'");
+				}
 				if($getId->num_rows == 1){
 					while($anId = $getId->fetch_assoc()){
 						$itemId = $anId['id'];
@@ -125,7 +132,41 @@
 				$built=$built."($id,$itemId)";
 			}
 			$built= str_replace(")(", "),(",$built);
-			$castVote = sprintf("insert ignore into db_".$table."_votes(user_id,".$table."_id) values$built");
+			$castVote = sprintf("insert ignore into db_activity_votes(user_id, activity_id) values$built");
+			executeInsertOrUpdate($castVote);
+		}
+	}
+	function castFoodVote($description){		
+		executeInsertOrUpdate("delete from db_food_votes where user_id = ".$_SESSION['userId']);
+		if($description != ''){
+			$id=$_SESSION['userId'];
+			$built="";
+			foreach($description as &$value){
+				$rawValue=$value;
+				$value=mysqli_real_escape_string($GLOBALS['conn'],$value);
+				try{
+					executeInsertOrUpdate("insert ignore into lu_food(description) values('$value')");
+					if($GLOBALS['conn']->insert_id != 0){
+						$user = executeQuery("select name from lu_users where id = $id");
+						if($user->num_rows == 1){
+							while($aUser = $user->fetch_assoc()){
+								sendMail("New Food Item Added", "<b>".$aUser['name']." has added \"$rawValue\" to the list of dining options.</b>","select u.email from lu_users u join db_rsvp r on u.id=r.user_id where u.notify = 1");
+							}
+						}
+					}
+					$getId = executeQuery("select id from lu_food where description = '$value'");
+				}catch(Exception $e){
+					$getId = executeQuery("select id from lu_food where description = '$value'");
+				}
+				if($getId->num_rows == 1){
+					while($anId = $getId->fetch_assoc()){
+						$itemId = $anId['id'];
+					}
+				}
+				$built=$built."($id,$itemId)";
+			}
+			$built= str_replace(")(", "),(",$built);
+			$castVote = sprintf("insert ignore into db_food_votes(user_id,food_id) values$built");
 			executeInsertOrUpdate($castVote);
 		}
 	}
@@ -139,20 +180,30 @@
 			}
 		}
 	}
-	function updateUserInfo($name, $email){
+	function updateUserInfo($name, $email,$notify){
+		$notify = ($notify != ""? 1:0);
 		$name = mysqli_real_escape_string($GLOBALS['conn'],$name);
 		$email = mysqli_real_escape_string($GLOBALS['conn'], $email);
+		$notify = mysqli_real_escape_string($GLOBALS['conn'], $notify);
 		$id=$_SESSION['userId'];
-		$query="update lu_users set name='$name', email='$email' where id = $id";
+		$query="update lu_users set name='$name', email='$email', notify=$notify where id = $id";
 		executeInsertOrUpdate($query);
 	}
 	function rsvp($attending,$comment){		
 		executeInsertOrUpdate("delete from db_rsvp where user_id = ".$_SESSION['userId']);
 		if($attending != ''){
 			$id=$_SESSION['userId'];
+			$unescapedComment = $comment;
 			$comment = mysqli_real_escape_string($GLOBALS['conn'],$comment);
 			$rsvp = sprintf("insert into db_rsvp(user_id,comment) values($id,'$comment')");
 			executeInsertOrUpdate($rsvp);
+			$user = executeQuery("select name from lu_users where id = $id");
+			if($user->num_rows == 1){
+				while($aUser = $user->fetch_assoc()){
+					sendMail($aUser['name']." joins the battle!", "<b>".$aUser['name']." has confirmed their attendance with the comment: \"$unescapedComment\".</b>","select u.email from lu_users u join db_rsvp r on u.id=r.user_id where u.notify = 1");
+					sendMail($aUser['name']." joins the battle!", "<b>".$aUser['name']." has confirmed their attendance with the comment: \"$unescapedComment\".</b><br>Click <a href='https://t3gs.ninja/lanPartay/'>here</a> to RSVP and vote.","select u.email from lu_users u left join db_rsvp r on u.id=r.user_id where u.notify = 1 and r.user_id is null");
+				}
+			}
 		}
 	}
 	function getUserStatus(){
@@ -180,7 +231,7 @@
 		return $rsvp;
 	}
 	function getDocket(){
-		if(date("w", time()) == 5){
+		if(date("N") == 5 && date("G") >= 17){
 			$docket = '';
 			$query = "select l.* from lu_activities l join (select *, count(*) as votes from db_activity_votes group by activity_id) d on l.id = d.activity_id order by votes desc limit 3";
 			$results = executeQuery($query);
@@ -190,11 +241,11 @@
 				}
 				$docket = rtrim($docket,", ");
 			}
-			return "<div class='alert alert-success' role='alert'><b>Today's Docket</b> - ".$docket."</div>";
+			return "<div id='alert-docket' class='alert alert-success alert-dismissible fade show' role='alert'><b>Today's Docket</b> - ".$docket."<button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button></div>";
 		}
 	}
 	function getFood(){
-		if(date("w", time()) == 5){
+		if(date("N") == 5 && date("G") >= 17){
 			$food = '';
 			$query = "select l.* from lu_food l join (select *, count(*) as votes from db_food_votes group by food_id) d on l.id = d.food_id order by votes desc limit 1";
 			$results = executeQuery($query);
@@ -204,7 +255,78 @@
 				}
 				$food = rtrim($food,", ");
 			}
-			return "<div class='alert alert-success' role='alert'><b>Today's Cuisine</b> - ".$food."</div>";
+			return "<div id='alert-food' class='alert alert-success alert-dismissible fade show' role='alert'><b>Today's Cuisine</b> - ".$food."<button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button></div>";
+		}
+	}
+	function hasRsvp(){
+		$id=$_SESSION['userId'];
+		$query="select * from db_rsvp where user_id = $id";
+		$results = executeQuery($query);
+		$rsvp = '';
+		if($results->num_rows == 1){
+			$rsvp = array('','');
+		}else{
+			$rsvp = array('collapse','aria-expanded="false"');
+		}
+		return $rsvp;
+	}
+	function getHistorical(){
+		$query="(select date_format(date,'%Y-%m-%d') as date from old_activity_votes order by date) union distinct (select date_format(date, '%Y-%m-%d') as date from old_food_votes order by date) order by date desc";
+		$dates=executeQuery($query);
+		if($dates->num_rows > 0){
+			while($date = $dates->fetch_assoc()){
+				$aDate = substr($date['date'],0,10);
+				$query = "select l.description, count(o.activity_id) as votes from old_activity_votes o join lu_activities l on o.activity_id = l.id where o.date like '$aDate %' group by o.activity_id order by count(o.activity_id) desc";
+				$activities=executeQuery($query);
+				$built="<tr><td>".$aDate."</td><td><table class='table table-sm table-bordered'><thead><th>Item</th><th>Votes</th><tbody>";
+				if($activities->num_rows > 0){
+					while($activity = $activities->fetch_assoc()){
+						$item = htmlspecialchars($activity['description']);
+						$votes = htmlspecialchars($activity['votes']);
+						$built=$built."<tr><td>$item</td><td>$votes</td></tr>";
+					}
+				}
+				$built=$built."</tbody></table></td><td><table class='table table-sm table-bordered'><thead><th>Item</th><th>Votes</th><tbody>";
+				$query = "select l.description, count(o.food_id) as votes from old_food_votes o join lu_food l on o.food_id = l.id where o.date like '$aDate %' group by o.food_id order by count(o.food_id) desc";
+				$food=executeQuery($query);
+				if($food->num_rows > 0){
+					while($option = $food->fetch_assoc()){
+						$item = htmlspecialchars($option['description']);
+						$votes = htmlspecialchars($option['votes']);
+						$built=$built."<tr><td>$item</td><td>$votes</td></tr>";
+					}
+				}
+				$built=$built.'</tbody></table></td></tr>';
+				echo $built;
+			}
+		}
+	}
+
+	function sendMail($title,$text,$query){
+		$mail = new PHPMailer;
+		$mail->IsSMTP();
+		$mail->Host = "ssl://smtp.gmail.com";
+		$mail->SMTPAuth=true;
+		$mail->SMTPSecure="ssl";
+		$mail->Port=465;
+		$mail->Encoding='8bit';
+		$mail->isHTML(true);
+		$mail->Username = $mail_user;
+		$mail->Password = $mail_pass;
+		$mail->AddAddress("");
+
+		$mail->setFrom("notifications@t3gs.ninja","Notification System");
+		$results = executeQuery($query);
+		if($results->num_rows > 0){
+			while($row = $results->fetch_assoc()){
+				$mail->AddBCC($row['email']);
+			}
+		}
+		$mail->Subject = $title;
+		$mail->Body=$text;
+		$mail->WordWrap =50;
+		if(!$mail->Send()) {
+			echo 'Mailer error: ' . $mail->ErrorInfo;
 		}
 	}
 ?>
